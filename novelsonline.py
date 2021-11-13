@@ -33,6 +33,8 @@ def run():
 def download_novel(novel_id, config_parser):
     if novel_id.startswith(PAGE_PREFIX):
         novel_id = novel_id[len(PAGE_PREFIX):]
+        if novel_id.endswith('/'):
+            novel_id = novel_id[0:len(novel_id)-1]
 
     if len(novel_id) == 0:
         return
