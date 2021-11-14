@@ -94,6 +94,30 @@ def download_chapter(chapter_url, save_folder, filename, config_parser):
         with open(filepath, 'w+', encoding='utf-8') as f:
             paragraphs = soup.select('#contentall p')
             for para in paragraphs:
+                if len(para.text) > 0:
+                    curr_elem = para.next_element
+                    while curr_elem.name != 'div' or not curr_elem.has_attr('class') or 'row' not in curr_elem['class']:
+                        if curr_elem.name is None:
+                            sentence = str(curr_elem).strip()
+                            if len(sentence) > 0:
+                                f.write(html.unescape(sentence) + '\n')
+                        elif curr_elem.name in ['br', 'p']:
+                            f.write('\n')
+                        elif curr_elem.name in ['noscript', 'script']:
+                            curr_elem = curr_elem.next_element
+                        elif curr_elem.name == 'img' and curr_elem.has_attr('src'):
+                            if curr_elem['src'].startswith('http'):
+                                image_url = curr_elem['src']
+                            else:
+                                image_url = PAGE_PREFIX + (
+                                    curr_elem['src'][1:] if curr_elem['src'].startswith('/') else curr_elem['src'])
+                            image_name = image_url.split('?')[0].split('/')[-1]
+                            download_image(image_url, f'{save_folder}/{image_name}', config_parser)
+                            f.write(f'[Image: {image_name}]\n')
+                        curr_elem = curr_elem.next_element
+                    break
+
+                '''
                 noscript = para.find('noscript')
                 if noscript is not None:
                     continue
@@ -110,6 +134,7 @@ def download_chapter(chapter_url, save_folder, filename, config_parser):
                     image_name = image_url.split('?')[0].split('/')[-1]
                     download_image(image_url, f'{save_folder}/{image_name}', config_parser)
                     f.write(f'[Image: {image_name}]\n\n')
+                '''
         print_info(f'Downloaded {chapter_url}')
         create_log(filepath, chapter_url, config_parser)
 
